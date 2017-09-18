@@ -27,6 +27,7 @@
     "debug": "^3.0.1",
     "fs-extra": "^4.0.1",
     "get-md-title": "^1.0.4",
+    "gists": "^1.0.0",
     "gray-matter": "^3.0.6",
     "lodash": "^4.17.4",
     "medium-sdk": "^0.0.4",
