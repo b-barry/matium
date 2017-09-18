@@ -92,7 +92,8 @@ export const parseFilesMatter = (filesPath = []) => {
       path,
       contentWithoutMatter,
       options,
-      content
+      contentWithCodeBlock: content,
+      content,
     }
   });
 };
