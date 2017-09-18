@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 import program from 'commander';
 import Conf from 'conf';
-import {error, info} from './utils/output.format';
+import {error, info, ok} from './utils/output.format';
 import exit from './utils/exit';
 import {resolvePaths} from './utils/path';
 import {pathExists} from 'fs-extra';
 import Debug from 'debug';
 import {getFilesToProcess, parseFilesMatter} from './core';
+import {createPost, createPostOptions, getClient} from './utils/medium';
+import {blue} from 'chalk';
 
 const debug = Debug('md:main');
 const conf = new Conf();
@@ -28,6 +30,9 @@ const configuredProgram = program.version('0.0.1')
 
 const main = async ({files, config, argv}) => {
 
+  console.log(ok('Medium imports markdown starting ... \n'));
+  console.log('_config', config, argv);
+
   let _config = Object.assign({}, config);
 
   if ((!config.mediumToken && !argv.mediumToken) || (!config.gistToken && !argv.gistToken)) {
@@ -40,12 +45,12 @@ const main = async ({files, config, argv}) => {
   }
 
   // TODO: don't forgot to set back the new token
-  if (config.mediumToken !== argv.mediumToken) {
+  if (config.mediumToken !== argv.mediumToken && !config.mediumToken && argv.mediumToken) {
     conf.set(MEDIUM_TOKEN_KEY, argv.mediumToken);
     _config = Object.assign({}, config, {mediumToken: argv.mediumToken});
   }
 
-  if (config.gistToken !== argv.gistToken) {
+  if (config.gistToken !== argv.gistToken && !config.gistToken && argv.gistToken) {
     conf.set(GIST_TOKEN_KEY, argv.gistToken);
     _config = Object.assign({}, config, {gistToken: argv.gistToken});
   }
@@ -57,12 +62,36 @@ const main = async ({files, config, argv}) => {
     return;
   }
 
-  console.log(info(`Reading content of all files and parsing the matter`));
+  console.log(info(`Reading content of all files and parsing the matter \n`));
 
   const contentsToProcess = await Promise.all(parseFilesMatter(filesToProcess));
+  const mediumClient = getClient(_config.mediumToken);
 
+  let mediumUser;
 
-  console.log('logging', JSON.stringify(contentsToProcess, null, 1));
+  try {
+    mediumUser = await mediumClient.getUserAsync();
+
+    console.log(blue(`Authenticated as ${mediumUser.username} \n`));
+
+    const posts = await Promise.all(contentsToProcess.map(post => {
+      const postOptions = createPostOptions(mediumUser.id, post);
+      return createPost(mediumClient, postOptions);
+    }));
+
+    console.log('logging', JSON.stringify(t, null, 1));
+
+  }
+  catch (err) {
+    console.error(
+      error(
+        `An unexpected error occurred while creating the empty post: 
+        ${err.message}`
+      )
+    );
+    await exit(1);
+  }
+
 
   /**
    * TODO
@@ -100,7 +129,7 @@ const handleRejection = err => {
 const handleUnexpected = err => {
   debug('handling unexpected error');
   console.error(
-    error(`An unexpected error occurred!\n  ${err.stack} ${err.stack}`)
+    error(`An unexpected error occurred!\n  ${err.message} ${err.stack} ${err.stack}`)
   );
   process.exit(1)
 };
