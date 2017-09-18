@@ -17,7 +17,9 @@
     "precommit": "lint-staged"
   },
   "dependencies": {
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-runtime": "^6.26.0",
+    "bluebird": "^3.5.0",
     "chalk": "^2.1.0",
     "commander": "^2.11.0",
     "conf": "^1.2.0",
@@ -29,7 +31,8 @@
     "lodash": "^4.17.4",
     "medium-sdk": "^0.0.4",
     "printf": "^0.2.5",
-    "readline-sync": "^1.4.7"
+    "readline-sync": "^1.4.7",
+    "slugid": "^1.1.0"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
