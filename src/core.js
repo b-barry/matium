@@ -43,7 +43,8 @@ export const getFilesToProcess = async (filesPath = []) => {
     console.error(
       error(
         `An unexpected error occurred while checking if all path files exist : 
-        ${err.message}`
+        ${err.message}
+        \n `
       )
     );
     await exit(1);
@@ -64,7 +65,7 @@ export const getFilesToProcess = async (filesPath = []) => {
 export const setDefaultOptionsMatter = (content, options = {}) => {
   return {
     title: options.title || getTitle(content).text,
-    tags: options.tags || '',
+    tags: options.tags || [],
     publication: options.publication || '',
     canonicalUrl: options.canonicalUrl || '',
     license: checkLicense(options.license) ? options.license : '',
