@@ -1,11 +1,11 @@
 {
   "name": "matium",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "repository": "",
   "author": "Boubacar Barry <bouba@hackages.io>",
   "license": "MIT",
   "bin": {
-    "medium-imports-markdown": "./build/index.js"
+    "matium": "./build/index.js"
   },
   "scripts": {
     "start": "yarn build && node ./build/index.js",

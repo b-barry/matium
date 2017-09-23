@@ -31,7 +31,7 @@ export const createPostOptions = (userId, {content, options}) => {
 export const createPost = async (client, data) => {
   const {options, userId} = data;
 
-  console.log(info(`Creating medium post: ${options.title} \n`));
+  console.log(info(`Creating medium post => "${options.title}" \n`));
 
   try {
     if (options.publication) {

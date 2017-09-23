@@ -1,17 +1,11 @@
 #!/usr/bin/env node
 import program from 'commander';
 import Conf from 'conf';
-import {error, info, ok, success} from './utils/output.format';
+import {error, info, ok} from './utils/output.format';
 import exit from './utils/exit';
 import {resolvePaths} from './utils/path';
-import {pathExists} from 'fs-extra';
 import Debug from 'debug';
-import {
-  createAllMediumPost,
-  getFilesToProcess,
-  parseCodeBlockAndCreateGistFromContent,
-  parseFilesMatter
-} from './core';
+import {createAllMediumPost, getFilesToProcess, parseCodeBlockAndCreateGistFromContent, parseFilesMatter} from './core';
 import {getClient} from './utils/medium';
 import {blue} from 'chalk';
 import slugid from 'slugid';
@@ -44,7 +38,6 @@ const configuredProgram = program
 
 const main = async ({files, config, argv}) => {
   console.log(ok('matium starting ... \n'));
-  console.log('_config', config, argv);
 
   let _config = Object.assign({}, config);
 
@@ -73,25 +66,24 @@ const main = async ({files, config, argv}) => {
     return;
   }
 
-  console.log(info(`Reading content of all files and parsing the matter \n`));
+  console.log(blue(`Matter ...\n`));
 
   const contentsToProcess = await Promise.all(parseFilesMatter(filesToProcess));
 
   const alias = slugid.nice();
   const gistClient = getGistClient(_config.gistToken);
 
-  console.log(info(`Parsing code blocks and creating gist\n`));
+  console.log(blue(`Code blocks and gist ...\n`));
 
-  const posts = await Promise.all(
+  let posts = await Promise.all(
     contentsToProcess.map(
       parseCodeBlockAndCreateGistFromContent(alias, gistClient)
     )
-  ).filter(post => !!post);
+  );
 
-  console.log(info(`Creating medium post(s) \n`));
+  posts = posts.filter(post => !!post);
 
   const mediumClient = getClient(_config.mediumToken);
-
   let mediumUser;
 
   try {
@@ -101,7 +93,7 @@ const main = async ({files, config, argv}) => {
 
     await Promise.all(createAllMediumPost(mediumClient, mediumUser)(posts));
 
-    console.log(success(`Done! \n`));
+
   } catch (err) {
     console.error(
       error(

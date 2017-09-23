@@ -1,6 +1,7 @@
 ---
 license: 'public-domain'
 ---
+
 # Test 2: Import
 
 When working with Angular and Angular CLI, you ended up quickly with a lot of folders as the application grows. The default behavior of CLI generates a folder with at least the class, css, html and test component file.

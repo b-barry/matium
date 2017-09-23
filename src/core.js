@@ -1,4 +1,4 @@
-import {error, newLine, table} from './utils/output.format';
+import {error, info, link, newLine, success, table} from './utils/output.format';
 import {pathExists} from 'fs-extra';
 import {humanizePath} from './utils/path';
 import getTitle from 'get-md-title';
@@ -6,9 +6,9 @@ import Matter from 'gray-matter';
 import fs from 'fs';
 import exit from './utils/exit';
 import {injectBlocksLink, parseBlocks} from './utils/extract-gfm';
-import {info} from 'eslint';
 import {createGistLinkFromCodeBlock} from './utils/gist';
 import {createPost, createPostOptions} from './utils/medium';
+import {green, red} from 'chalk';
 
 export const checkLicense = license => {
   if (!license) {
@@ -56,10 +56,10 @@ export const getFilesToProcess = async (filesPath = []) => {
   }
 
   table(
-    ['Path', 'Will be processed', 'Will not be processed'],
+    ['Path', 'Processed', '!Processed'],
     filesProcessed
-      .map(path => [humanizePath(path), 'TRUE', ''])
-      .concat(filesNotProcessed.map(path => [humanizePath(path), '', 'TRUE'])),
+      .map(path => [humanizePath(path), green('TRUE'), ''])
+      .concat(filesNotProcessed.map(path => [humanizePath(path), '', red('TRUE')])),
     [5, 5]
   );
 
@@ -80,6 +80,9 @@ export const setDefaultOptionsMatter = (content, options = {}) => {
 
 export const parseFilesMatter = (filesPath = []) => {
   return filesPath.map(async path => {
+
+    console.log(info(`${humanizePath(path)}: reading content and parsing the matter \n`));
+
     const {data, content: contentWithoutMatter} = Matter(
       fs.readFileSync(path, 'utf8')
     );
@@ -89,8 +92,7 @@ export const parseFilesMatter = (filesPath = []) => {
       ? ` *Cross-posted from [${options.canonicalUrl}](${options.canonicalUrl}).*`
       : '';
 
-    const content = `
-      # ${options.title}
+    const content = `# ${options.title}
       
       ${contentWithoutMatter}
       
@@ -101,25 +103,23 @@ export const parseFilesMatter = (filesPath = []) => {
       contentWithoutMatter,
       options,
       contentWithCodeBlock: content,
-      content
+      content: ''
     };
   });
 };
 
-export const parseCodeBlockAndCreateGistFromContent = (
-  alias,
-  gistClient
-) => async post => {
+export const parseCodeBlockAndCreateGistFromContent = (alias,
+                                                       gistClient) => async post => {
+
+  console.log(info(`Parsing code blocks and creating gist => ${post.options.title}\n`));
+
   try {
-    console.log(info(`Extracting code blocks \n`));
     const {text, blocks} = parseBlocks(post.contentWithCodeBlock);
 
-    console.log(info(`Creating gist from code blocks \n`));
     const blocksWithLink = await Promise.all(
       blocks.map(createGistLinkFromCodeBlock(alias, gistClient))
     );
 
-    console.log(info(`Replacing code block by gist link \n`));
     const content = injectBlocksLink(text, blocksWithLink);
 
     return {
@@ -138,13 +138,18 @@ export const parseCodeBlockAndCreateGistFromContent = (
   }
 };
 
-export const createAllMediumPost = (mediumClient, mediumUser) => (
-  posts = []
-) => {
+export const createAllMediumPost = (mediumClient, mediumUser) => (posts = []) => {
   return posts
     .map(post => {
       const postOptions = createPostOptions(mediumUser.id, post);
-      return createPost(mediumClient, postOptions);
+      return createPost(mediumClient, postOptions)
+        .then((postCreated) => {
+          if (!postCreated) {
+            return null;
+          }
+
+          console.log(success(`${post.options.title} created => ${link(postCreated.url)}\n`));
+          return postCreated;
+        });
     })
-    .filter(post => !!post);
 };
