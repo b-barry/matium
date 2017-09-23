@@ -14,18 +14,19 @@ export const link = text => underline(text);
 
 export const listItem = (n, msg) => {
   if (!msg) {
-    msg = n
-    n = '-'
+    msg = n;
+    n = '-';
   }
   if (!isNaN(n)) {
-    n += '.'
+    n += '.';
   }
-  return `${gray(n)} ${msg}`
+  return `${gray(n)} ${msg}`;
 };
 
 export const note = msg => `${yellow('> NOTE:')} ${msg}`;
 
-export const ok = msg => `${cyan(process.platform === 'win32' ? '√' : '✔')} ${msg}`;
+export const ok = msg =>
+  `${cyan(process.platform === 'win32' ? '√' : '✔')} ${msg}`;
 
 export const success = msg => `${cyan('> Success!')} ${msg}`;
 export const newLine = () => console.log();
@@ -34,7 +35,7 @@ export const newLine = () => console.log();
 export const table = (fieldNames = [], data = [], margins = []) => {
   const printLine = (data, sizes) =>
     data.reduce((line, col, i) => {
-      return line + printf(`%-${sizes[i]}s`, col)
+      return line + printf(`%-${sizes[i]}s`, col);
     }, '');
 
   // Compute size of each column
@@ -43,8 +44,8 @@ export const table = (fieldNames = [], data = [], margins = []) => {
       return row.map((col, i) => {
         const currentMaxColSize = acc[i] || 0;
         const colSize = (col && col.length) || 0;
-        return Math.max(currentMaxColSize, colSize)
-      })
+        return Math.max(currentMaxColSize, colSize);
+      });
     }, fieldNames.map(col => col.length))
     // Add margin to all columns except the last
     .map((size, i) => (i < margins.length && size + margins[i]) || size);
@@ -52,5 +53,5 @@ export const table = (fieldNames = [], data = [], margins = []) => {
   // Print header
   console.log(grey(printLine(fieldNames, sizes)));
   // Print content
-  data.forEach(row => console.log(printLine(row, sizes)))
+  data.forEach(row => console.log(printLine(row, sizes)));
 };

@@ -5,11 +5,9 @@
  * Licensed under the MIT License
  */
 
-
 let re = require('gfm-code-block-regex')();
 let codeBlocks = require('gfm-code-blocks');
 let idRegex = /(__CODE_BLOCK\d+__)/g;
-
 
 /**
  * Strip code blocks from a string and replaced them with
@@ -20,13 +18,12 @@ let idRegex = /(__CODE_BLOCK\d+__)/g;
  * @api public
  */
 
-exports.stripBlocks = function (str) {
+exports.stripBlocks = function(str) {
   let arr = str.match(re) || [];
-  return arr.reduce(function (acc, match, i) {
+  return arr.reduce(function(acc, match, i) {
     return acc.replace(match, exports.id(i));
   }, str);
 };
-
 
 /**
  * Return an array of all **gfm code blocks** found.
@@ -37,10 +34,9 @@ exports.stripBlocks = function (str) {
  * @api public
  */
 
-exports.extractBlocks = function (str) {
+exports.extractBlocks = function(str) {
   return codeBlocks(str);
 };
-
 
 /**
  * Convenience method to make it easy to replace code blocks.
@@ -66,14 +62,13 @@ exports.extractBlocks = function (str) {
  * @api public
  */
 
-exports.parseBlocks = function (str) {
+exports.parseBlocks = function(str) {
   let o = {};
   o.text = exports.stripBlocks(str);
   o.blocks = codeBlocks(str);
   o.markers = o.text.match(idRegex) || [];
   return o;
 };
-
 
 /**
  * Used for adding code blocks back into the string after they
@@ -89,21 +84,20 @@ exports.parseBlocks = function (str) {
  * @api public
  */
 
-exports.injectBlocks = function (str, o) {
+exports.injectBlocks = function(str, o) {
   let arr = str.match(idRegex) || [];
-  return arr.reduce(function (acc, match, i) {
+  return arr.reduce(function(acc, match, i) {
     return acc.replace(match, exports.createBlock(o[i]));
   }, str);
 };
 
-exports.injectBlocksLink = function (str, o) {
+exports.injectBlocksLink = function(str, o) {
   let arr = str.match(idRegex) || [];
-  return arr.reduce(function (acc, match, i) {
-    return acc.replace(match, o[i].link || '');
+  return arr.reduce(function(acc, match, i) {
+    return acc.replace(match, `\n ${o[i].link} \n` || '');
   }, str);
 };
 
-
 /**
  * Generate an id based on the index of each code block.
  * This is used as a heuristic for re-adding extracted
@@ -114,11 +108,10 @@ exports.injectBlocksLink = function (str, o) {
  * @api private
  */
 
-exports.createBlock = function (o) {
+exports.createBlock = function(o) {
   return '```' + o.lang + '\n' + o.code + '\n```\n';
 };
 
-
 /**
  * Generate an id based on the index of each code block.
  * This is used as a heuristic for re-adding extracted
@@ -129,6 +122,6 @@ exports.createBlock = function (o) {
  * @api private
  */
 
-exports.id = function (i) {
+exports.id = function(i) {
   return '__CODE_BLOCK' + i + '__';
 };
