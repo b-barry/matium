@@ -1,5 +1,4 @@
-# Matium [![stability][0]][1]
-[![npm version][2]][3] [![downloads][8]][9] 
+# Matium 
 
 Markdown imports to Medium, done right :)
 `
