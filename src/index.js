@@ -5,11 +5,16 @@ import {error, info, ok} from './utils/output.format';
 import exit from './utils/exit';
 import {resolvePaths} from './utils/path';
 import Debug from 'debug';
-import {createAllMediumPost, getFilesToProcess, parseCodeBlockAndCreateGistFromContent, parseFilesMatter} from './core';
+import {
+  createAllMediumPost,
+  getFilesToProcess,
+  parseCodeBlockAndCreateGistFromContent,
+  parseFilesMatter
+} from './core';
 import {getClient} from './utils/medium';
 import {blue} from 'chalk';
 import slugid from 'slugid';
-import {getClient as getGistClient} from './utils/gist';
+import {deleteGist, getClient as getGistClient} from './utils/gist';
 
 const debug = Debug('md:main');
 const conf = new Conf();
@@ -59,6 +64,10 @@ const main = async ({files, config, argv}) => {
     _config = Object.assign({}, config, {gistToken: argv.gistToken});
   }
 
+  const alias = slugid.nice();
+  const gistClient = getGistClient(_config.gistToken);
+  const mediumClient = getClient(_config.mediumToken);
+
   const filesToProcess = await getFilesToProcess(files);
 
   if (filesToProcess.length === 0) {
@@ -70,8 +79,15 @@ const main = async ({files, config, argv}) => {
 
   const contentsToProcess = await Promise.all(parseFilesMatter(filesToProcess));
 
-  const alias = slugid.nice();
-  const gistClient = getGistClient(_config.gistToken);
+  const gistsToRemove = contentsToProcess.reduce(
+    (acc, {options}) => acc.concat(options.gists),
+    []
+  );
+
+  if (gistsToRemove.length > 0) {
+    console.log(blue(`Gists already created found, they will be deleted...\n`));
+    await Promise.all(gistsToRemove.map(id => deleteGist(gistClient, id)));
+  }
 
   console.log(blue(`Code blocks and gist ...\n`));
 
@@ -83,7 +99,6 @@ const main = async ({files, config, argv}) => {
 
   posts = posts.filter(post => !!post);
 
-  const mediumClient = getClient(_config.mediumToken);
   let mediumUser;
 
   try {
@@ -92,8 +107,6 @@ const main = async ({files, config, argv}) => {
     console.log(blue(`Authenticated in medium as ${mediumUser.username} \n`));
 
     await Promise.all(createAllMediumPost(mediumClient, mediumUser)(posts));
-
-
   } catch (err) {
     console.error(
       error(

@@ -1,4 +1,11 @@
-import {error, info, link, newLine, success, table} from './utils/output.format';
+import {
+  error,
+  info,
+  link,
+  newLine,
+  success,
+  table
+} from './utils/output.format';
 import {pathExists} from 'fs-extra';
 import {humanizePath} from './utils/path';
 import getTitle from 'get-md-title';
@@ -6,9 +13,12 @@ import Matter from 'gray-matter';
 import fs from 'fs';
 import exit from './utils/exit';
 import {injectBlocksLink, parseBlocks} from './utils/extract-gfm';
-import {createGistLinkFromCodeBlock} from './utils/gist';
+import {createGistLinkFromCodeBlock, getGistIdFromGistLink} from './utils/gist';
 import {createPost, createPostOptions} from './utils/medium';
 import {green, red} from 'chalk';
+import Promise from 'bluebird';
+
+Promise.promisifyAll(fs);
 
 export const checkLicense = license => {
   if (!license) {
@@ -59,7 +69,9 @@ export const getFilesToProcess = async (filesPath = []) => {
     ['Path', 'Processed', '!Processed'],
     filesProcessed
       .map(path => [humanizePath(path), green('TRUE'), ''])
-      .concat(filesNotProcessed.map(path => [humanizePath(path), '', red('TRUE')])),
+      .concat(
+        filesNotProcessed.map(path => [humanizePath(path), '', red('TRUE')])
+      ),
     [5, 5]
   );
 
@@ -74,14 +86,16 @@ export const setDefaultOptionsMatter = (content, options = {}) => {
     tags: options.tags || [],
     publication: options.publication || '',
     canonicalUrl: options.canonicalUrl || '',
-    license: checkLicense(options.license) ? options.license : ''
+    license: checkLicense(options.license) ? options.license : '',
+    gists: options.gists || []
   };
 };
 
 export const parseFilesMatter = (filesPath = []) => {
   return filesPath.map(async path => {
-
-    console.log(info(`${humanizePath(path)}: reading content and parsing the matter \n`));
+    console.log(
+      info(`${humanizePath(path)}: reading content and parsing the matter \n`)
+    );
 
     const {data, content: contentWithoutMatter} = Matter(
       fs.readFileSync(path, 'utf8')
@@ -108,10 +122,13 @@ export const parseFilesMatter = (filesPath = []) => {
   });
 };
 
-export const parseCodeBlockAndCreateGistFromContent = (alias,
-                                                       gistClient) => async post => {
-
-  console.log(info(`Parsing code blocks and creating gist => ${post.options.title}\n`));
+export const parseCodeBlockAndCreateGistFromContent = (
+  alias,
+  gistClient
+) => async post => {
+  console.log(
+    info(`Parsing code blocks and creating gist => ${post.options.title}\n`)
+  );
 
   try {
     const {text, blocks} = parseBlocks(post.contentWithCodeBlock);
@@ -119,11 +136,23 @@ export const parseCodeBlockAndCreateGistFromContent = (alias,
     const blocksWithLink = await Promise.all(
       blocks.map(createGistLinkFromCodeBlock(alias, gistClient))
     );
-
     const content = injectBlocksLink(text, blocksWithLink);
+
+    // saving new matter matter
+    const gists = blocksWithLink.map(({link: l}) => getGistIdFromGistLink(l));
+    const options = {
+      ...post.options,
+      gists
+    };
+
+    await fs.writeFileAsync(
+      post.path,
+      Matter.stringify(post.contentWithoutMatter, options)
+    );
 
     return {
       ...post,
+      options,
       content
     };
   } catch (err) {
@@ -138,18 +167,20 @@ export const parseCodeBlockAndCreateGistFromContent = (alias,
   }
 };
 
-export const createAllMediumPost = (mediumClient, mediumUser) => (posts = []) => {
-  return posts
-    .map(post => {
-      const postOptions = createPostOptions(mediumUser.id, post);
-      return createPost(mediumClient, postOptions)
-        .then((postCreated) => {
-          if (!postCreated) {
-            return null;
-          }
+export const createAllMediumPost = (mediumClient, mediumUser) => (
+  posts = []
+) => {
+  return posts.map(post => {
+    const postOptions = createPostOptions(mediumUser.id, post);
+    return createPost(mediumClient, postOptions).then(postCreated => {
+      if (!postCreated) {
+        return null;
+      }
 
-          console.log(success(`${post.options.title} created => ${link(postCreated.url)}\n`));
-          return postCreated;
-        });
-    })
+      console.log(
+        success(`${post.options.title} created => ${link(postCreated.url)}\n`)
+      );
+      return postCreated;
+    });
+  });
 };
