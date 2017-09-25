@@ -1,9 +1,9 @@
-import Gists from 'gists';
+import Github from 'github-base';
 import Promise from 'bluebird';
 import {error} from './output.format';
 
 export const getClient = token => {
-  const instance = new Gists({
+  const instance = new Github({
     token
   });
 
@@ -23,7 +23,7 @@ export const getCreateGistOptions = (alias, index, {code, lang}) => {
   };
 };
 
-export const createGistLink = (gist = {}) => {
+export const getGistLink = (gist = {}) => {
   return `https://gist.github.com/${gist.owner.login}/${gist.id}`;
 };
 
@@ -41,12 +41,14 @@ export const createGist = async (client, data) => {
   }
 };
 
-export const createGistLinkFromCodeBlock = (alias, gistClient) => async (block,
-                                                                         index) => {
+export const createGistLinkFromCodeBlock = (alias, gistClient) => async (
+  block,
+  index
+) => {
   const opts = getCreateGistOptions(alias, index, block);
 
   const gist = await createGist(gistClient, opts);
-  const link = createGistLink(gist);
+  const link = getGistLink(gist);
 
   return {
     ...block,
