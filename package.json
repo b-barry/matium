@@ -29,7 +29,7 @@
     "get-md-title": "^1.0.4",
     "gfm-code-block-regex": "^1.0.0",
     "gfm-code-blocks": "^1.0.0",
-    "gists": "^1.0.0",
+    "github-base": "^0.5.4",
     "gray-matter": "^3.0.6",
     "lodash": "^4.17.4",
     "medium-sdk": "^0.0.4",
