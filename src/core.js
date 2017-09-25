@@ -8,7 +8,6 @@ import {
 } from './utils/output.format';
 import {pathExists} from 'fs-extra';
 import {humanizePath} from './utils/path';
-import getTitle from 'get-md-title';
 import Matter from 'gray-matter';
 import fs from 'fs';
 import exit from './utils/exit';
@@ -82,7 +81,7 @@ export const getFilesToProcess = async (filesPath = []) => {
 
 export const setDefaultOptionsMatter = (content, options = {}) => {
   return {
-    title: options.title || getTitle(content).text,
+    title: options.title || '',
     tags: options.tags || [],
     publication: options.publication || '',
     canonicalUrl: options.canonicalUrl || '',

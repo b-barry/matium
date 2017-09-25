@@ -15,6 +15,7 @@ import {getClient} from './utils/medium';
 import {blue} from 'chalk';
 import slugid from 'slugid';
 import {deleteGist, getClient as getGistClient} from './utils/gist';
+import pkg from '../package.json';
 
 const debug = Debug('md:main');
 const conf = new Conf();
@@ -29,15 +30,15 @@ const config = {
 
 // Commander
 const configuredProgram = program
-  .version('0.0.1')
-  .usage('<file ...> [options]')
+  .version(pkg.version)
+  .usage('<files ...> [options]')
   .option(
     `-m, --${MEDIUM_TOKEN_KEY} [token]`,
     'Third party integration token on medium, stored after first use'
   )
   .option(
     `-g, --${GIST_TOKEN_KEY} [token]`,
-    'Gist authentication token, stored after first use'
+    'Personal token on github with Gist Authorization, stored after first use'
   )
   .parse(process.argv);
 
